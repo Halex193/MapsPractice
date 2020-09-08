@@ -8,22 +8,14 @@ import io.ktor.routing.*
 import io.ktor.serialization.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
-import org.litote.kmongo.*
-import org.litote.kmongo.coroutine.*
-import org.litote.kmongo.reactivestreams.KMongo
-import com.mongodb.ConnectionString
-import org.litote.kmongo.reactivestreams.getCollection
+import ro.halex.mapspractice.common.Location
+import ro.halex.mapspractice.common.NamedLocation
 
-val connectionString: ConnectionString? = System.getenv("MONGODB_URI")?.let {
-    ConnectionString("$it?retryWrites=false")
-}
-
-val client = KMongo.createClient().coroutine
-val database = client.getDatabase("shoppingList")
-val collection = database.getCollection<ShoppingListItem>()
+val deviceLocations = mutableMapOf<String, Location>()
 
 fun main() {
-    val port = System.getenv("PORT")?.toInt() ?: 9090
+    val port = System.getenv("PORT")?.toInt() ?: 8080
+
     embeddedServer(Netty, port) {
         install(ContentNegotiation) {
             json()
@@ -39,20 +31,13 @@ fun main() {
         }
 
         routing {
-            route(ShoppingListItem.path) {
-                get {
-                    val message = collection.find().toList()
-                    call.respond(message)
-                }
-                post {
-                    collection.insertOne(call.receive<ShoppingListItem>())
-                    call.respond(HttpStatusCode.OK)
-                }
-                delete("/{id}") {
-                    val id = call.parameters["id"]?.toInt() ?: error("Invalid delete request")
-                    collection.deleteOne(ShoppingListItem::id eq id)
-                    call.respond(HttpStatusCode.OK)
-                }
+            post("/device-location"){
+                val deviceLocation = call.receive<NamedLocation>()
+                deviceLocations[deviceLocation.name] = deviceLocation.location
+                call.respond(HttpStatusCode.OK)
+            }
+            get("/locations") {
+                call.respond(deviceLocations)
             }
             get("/") {
                 call.respondText(

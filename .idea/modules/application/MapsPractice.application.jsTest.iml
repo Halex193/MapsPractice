@@ -6,8 +6,8 @@
         <dependsOnModuleNames>:application:commonTest</dependsOnModuleNames>
         <sourceSets>
           <sourceSet>MapsPractice.application.jsMain</sourceSet>
-          <sourceSet>MapsPractice.application.commonMain</sourceSet>
           <sourceSet>MapsPractice.application.commonTest</sourceSet>
+          <sourceSet>MapsPractice.application.commonMain</sourceSet>
         </sourceSets>
         <newMppModelJpsModuleKind>COMPILATION_AND_SOURCE_SET_HOLDER</newMppModelJpsModuleKind>
         <externalSystemTestTasks>
