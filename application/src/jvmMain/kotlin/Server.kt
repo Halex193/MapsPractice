@@ -8,10 +8,10 @@ import io.ktor.routing.*
 import io.ktor.serialization.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
-import ro.halex.mapspractice.common.Location
-import ro.halex.mapspractice.common.NamedLocation
+import ro.halex.mapspractice.common.Coordinates
+import ro.halex.mapspractice.common.NamedCoordinates
 
-val deviceLocations = mutableMapOf<String, Location>()
+val deviceLocations = mutableMapOf<String, Coordinates>()
 
 fun main() {
     val port = System.getenv("PORT")?.toInt() ?: 8080
@@ -32,8 +32,8 @@ fun main() {
 
         routing {
             post("/device-location"){
-                val deviceLocation = call.receive<NamedLocation>()
-                deviceLocations[deviceLocation.name] = deviceLocation.location
+                val deviceLocation = call.receive<NamedCoordinates>()
+                deviceLocations[deviceLocation.name] = deviceLocation.coordinates
                 call.respond(HttpStatusCode.OK)
             }
             get("/locations") {
