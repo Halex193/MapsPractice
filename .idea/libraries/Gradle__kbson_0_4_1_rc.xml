@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: kbson-0.4.1-rc">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.github.jershell/kbson/0.4.1-rc/2e02352ce49f4e48f9eddcace7788520d8b3fd79/kbson-0.4.1-rc.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.github.jershell/kbson/0.4.1-rc/b25255129fd3cd614d86b34d08e56f7d8b737c49/kbson-0.4.1-rc-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
