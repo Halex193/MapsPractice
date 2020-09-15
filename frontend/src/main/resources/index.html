@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Radar</title>
+
+    <style>
+        #mapDiv {
+            height: 100%;
+        }
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+    <script defer
+            src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCnqSXRu4tIfUIbkOEIFkI-8uqfglWj1hU&callback=initMap">
+    </script>
+</head>
+<body>
+<div id="root"></div>
+<div id="mapDiv"></div>
+
+<script src="frontend.js"></script>
+<script>
+    function initMap()
+    {
+        frontend.initializeMap()
+    }
+</script>
+</body>
+</html>

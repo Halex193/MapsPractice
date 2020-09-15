@@ -18,5 +18,6 @@ rootProject.name = "MapsPractice"
 
 include(":library")
 include(":android")
-include(":application")
-
+//include(":application")
+include(":server")
+include(":frontend")

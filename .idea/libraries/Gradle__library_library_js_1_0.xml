@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="Gradle: library.library-js-1.0">
-    <CLASSES>
-      <root url="jar://$PROJECT_DIR$/library/build/libs/library-js-1.0.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>
