@@ -23,7 +23,6 @@ dependencies {
     //ktor client js json
     implementation("io.ktor:ktor-client-json-js:$ktor_version")
     implementation("io.ktor:ktor-client-serialization-js:$ktor_version")
-    implementation(npm("@googlemaps/google-maps-services-js", "3.1.6"))
     implementation(npm("@types/googlemaps", "3.39.13"))
 }
 kotlin {

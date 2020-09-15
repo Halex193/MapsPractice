@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Gradle: ro.halex.mapspractice-server.server-0.0.1">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/server/build/libs/server-0.0.1.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

@@ -531,7 +531,7 @@ external enum class ControlPosition {
     TOP_RIGHT /* = 3 */
 }
 
-external open class Marker(opts: ReadonlyMarkerOptions = definedExternally) : MVCObject {
+external open class Marker(opts: dynamic = definedExternally) : MVCObject {
     open fun getAnimation(): Animation?
     open fun getClickable(): Boolean
     open fun getCursor(): String?

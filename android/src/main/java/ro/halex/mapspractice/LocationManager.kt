@@ -210,8 +210,8 @@ class LocationManager(private val activity: Activity, private val httpClient: Ht
         }
         val create = LocationRequest.create() ?: return
         val locationRequest = create.apply {
-            interval = 10000
-            fastestInterval = 5000
+            interval = 100
+            fastestInterval = 100
             priority = LocationRequest.PRIORITY_HIGH_ACCURACY
         }
         this.locationRequest = locationRequest
