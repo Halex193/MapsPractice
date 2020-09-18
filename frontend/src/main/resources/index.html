@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Radar</title>
+    <title>Maps Practice</title>
 
     <style>
         #mapDiv {
@@ -15,18 +15,30 @@
             padding: 0;
         }
     </style>
+    <link rel="stylesheet" href="style.css"/>
+    <script
+            src="https://use.fontawesome.com/releases/v5.14.0/js/all.js"
+            data-auto-a11y="true"
+    ></script>
 </head>
 <body>
-<div id="root"></div>
-<div id="mapDiv"></div>
 
+<div id="mapDiv"></div>
+<div id="wrapper">
+    <div id="devices" class="select-box">
+        <form id="current" class="select-box__current" tabindex="1">
+
+        </form>
+        <ul id="list" class="select-box__list">
+
+        </ul>
+    </div>
+    <div id="sendButton" class="button">Send location <i class="fas fa-arrow-right"></i></div>
+</div>
+<div id="notification">
+    Here you can check completed routes and estimated times
+</div>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCnqSXRu4tIfUIbkOEIFkI-8uqfglWj1hU"></script>
-<script>
-    let googleMap = new google.maps.Map(document.getElementById("mapDiv"), {
-        center: {lat: 45.802427, lng: 24.1437217},
-        zoom: 18
-    });
-</script>
 <script src="frontend.js"></script>
 </body>
 </html>

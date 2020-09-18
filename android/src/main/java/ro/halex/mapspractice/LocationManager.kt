@@ -5,7 +5,6 @@ import android.app.Activity
 import android.content.IntentSender
 import android.content.pm.PackageManager
 import android.location.Location
-import android.os.Build
 import android.os.Bundle
 import android.os.Looper
 import android.util.Log
@@ -16,11 +15,10 @@ import com.google.android.gms.location.*
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.tasks.Task
-import io.ktor.client.*
 import io.ktor.client.features.websocket.*
-import io.ktor.http.*
 import io.ktor.http.cio.websocket.*
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.Channel.Factory.CONFLATED
 import kotlinx.coroutines.channels.ClosedReceiveChannelException
@@ -28,9 +26,6 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import ro.halex.mapspractice.common.Coordinates
-import ro.halex.mapspractice.common.NamedCoordinates
-import ro.halex.mapspractice.common.deviceLocationEndpoint
-import java.util.*
 
 
 private const val KEY_CAMERA_POSITION = "camera_position"
@@ -40,7 +35,8 @@ private const val REQUEST_CHECK_SETTINGS: Int = 200
 private const val PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 100
 private const val TAG = "LocationManager"
 
-class LocationManager(private val activity: Activity, private val httpClient: HttpClient, private val coroutineScope: CoroutineScope) : LocationCallback()
+@ExperimentalCoroutinesApi
+class LocationManager(private val activity: Activity, private val coroutineScope: CoroutineScope) : LocationCallback()
 {
     var map: GoogleMap? = null
     var locationPermissionGranted = false
@@ -50,25 +46,20 @@ class LocationManager(private val activity: Activity, private val httpClient: Ht
     var locationRequest: LocationRequest? = null
     var requestingLocationUpdates = false
     private val locationChannel = Channel<Coordinates>(CONFLATED)
-    private val deviceName: String = getDeviceName()
+    var webSocketSession: ClientWebSocketSession? = null
+    var lastLocation: Coordinates? = null
 
     private suspend fun sendLocation()
     {
         try
         {
-            httpClient.webSocket(
-                    HttpMethod.Get,
-                    activity.getString(R.string.location_host),
-                    activity.resources.getInteger(R.integer.location_port),
-                    deviceLocationEndpoint
-            ){
-                Log.i(TAG, "Location transmission WebSocket connected")
-                for (coordinates in locationChannel)
-                {
-                    Log.i(TAG, coordinates.toString())
-                    send(Json.encodeToString(NamedCoordinates(deviceName, coordinates)))
+            for (coordinates in locationChannel)
+            {
+                Log.i(TAG, coordinates.toString())
+                webSocketSession?.apply {
+                    if(!outgoing.isClosedForSend)
+                        send(Json.encodeToString(coordinates))
                 }
-                Log.i(TAG, "Location transmission WebSocket disconnected")
             }
         } catch (e: ClosedReceiveChannelException)
         {
@@ -84,7 +75,9 @@ class LocationManager(private val activity: Activity, private val httpClient: Ht
         locationResult ?: return
         for (location in locationResult.locations)
         {
-            locationChannel.offer(Coordinates(location.latitude, location.longitude))
+            val coordinates = Coordinates(location.latitude, location.longitude)
+            locationChannel.offer(coordinates)
+            lastLocation = coordinates
         }
     }
 
@@ -262,19 +255,6 @@ class LocationManager(private val activity: Activity, private val httpClient: Ht
 
     fun stop()
     {
-        stopLocationUpdates()
-    }
-
-    private fun getDeviceName(): String
-    {
-        val manufacturer = Build.MANUFACTURER
-        val model = Build.MODEL
-        return if (model.toLowerCase(Locale.getDefault()).startsWith(manufacturer.toLowerCase(Locale.getDefault())))
-        {
-            model.capitalize(Locale.getDefault())
-        } else
-        {
-            "${manufacturer.capitalize(Locale.getDefault())} $model"
-        }
+//        stopLocationUpdates()
     }
 }

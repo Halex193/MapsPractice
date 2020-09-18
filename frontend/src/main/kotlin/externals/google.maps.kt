@@ -109,9 +109,9 @@ external interface MapHandlerMap {
         set(value) = definedExternally
 }
 
-external open class Map<E : Element>(mapDiv: E, opts: MapOptions = definedExternally) : MVCObject {
+external open class Map<E : Element>(mapDiv: E, opts: dynamic = definedExternally) : MVCObject {
     open fun <N : Any> addListener(eventName: N, handler: MVCEventHandler<Map<E> /* this */, Any>): MapsEventListener
-    override fun addListener(eventName: String, handler: MVCEventHandler<MVCObject, Array<Any>>): MapsEventListener
+    override fun addListener(eventName: String, handler: dynamic): MapsEventListener
     open fun fitBounds(bounds: LatLngBounds, padding: Number = definedExternally)
     open fun fitBounds(bounds: LatLngBounds, padding: Padding = definedExternally)
     open fun fitBounds(bounds: LatLngBoundsLiteral, padding: Number = definedExternally)

@@ -3,6 +3,11 @@
     xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
+            android:id="@+id/done"
+            android:icon="@drawable/ic_baseline_done_24"
+            android:title="Done"
+            app:showAsAction="always" />
+    <item
         android:id="@+id/next"
         android:icon="@drawable/ic_baseline_navigate_next_24"
         android:title="Next"

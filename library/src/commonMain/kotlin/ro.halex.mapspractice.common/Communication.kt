@@ -1,5 +1,4 @@
 package ro.halex.mapspractice.common
 
-const val deviceLocationEndpoint = "/device-location"
-const val locationsEndPoint = "/locations"
-const val waypointEndpoint = "/waypoints"
+const val deviceEndpoint = "/device-locations"
+const val applicationEndpoint = "/application-locations"

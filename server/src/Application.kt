@@ -1,39 +1,46 @@
 package ro.halex.mapspractice
 
 import io.ktor.application.*
-import io.ktor.response.*
-import io.ktor.request.*
-import io.ktor.routing.*
-import io.ktor.http.*
-import io.ktor.locations.*
 import io.ktor.features.*
-import org.slf4j.event.*
-import io.ktor.websocket.*
+import io.ktor.http.*
 import io.ktor.http.cio.websocket.*
 import io.ktor.http.content.*
+import io.ktor.locations.*
+import io.ktor.request.*
+import io.ktor.response.*
+import io.ktor.routing.*
 import io.ktor.serialization.*
+import io.ktor.websocket.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.BroadcastChannel
-import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.Channel.Factory.BUFFERED
+import kotlinx.coroutines.channels.Channel.Factory.CONFLATED
+import kotlinx.coroutines.channels.Channel.Factory.UNLIMITED
+import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import kotlinx.coroutines.channels.ClosedSendChannelException
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.launch
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import ro.halex.mapspractice.common.Coordinates
-import ro.halex.mapspractice.common.NamedCoordinates
-import ro.halex.mapspractice.common.deviceLocationEndpoint
-import ro.halex.mapspractice.common.locationsEndPoint
-import java.lang.Exception
-import java.time.*
+import org.slf4j.event.Level
+import ro.halex.mapspractice.common.*
+import java.time.Duration
 
 val deviceLocations = mutableMapOf<String, Coordinates>()
+
 @ExperimentalCoroutinesApi
-val broadcastChannel = BroadcastChannel<Unit>(Channel.CONFLATED)
+val deviceWaypoints = mutableMapOf<String, BroadcastChannel<Coordinates>>()
+
+@ExperimentalCoroutinesApi
+val finishedRoutes = BroadcastChannel<FinishedRoute>(BUFFERED)
+
+@ExperimentalCoroutinesApi
+val broadcastChannel = BroadcastChannel<Unit>(CONFLATED)
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
@@ -41,9 +48,11 @@ fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 @ExperimentalCoroutinesApi
 @Suppress("unused") // Referenced in application.conf
 @kotlin.jvm.JvmOverloads
-fun Application.module(testing: Boolean = false) {
-    install(Locations) {
-    }
+fun Application.module(testing: Boolean = false)
+{
+    install(Locations)
+
+    install(DataConversion)
 
     install(CallLogging) {
         level = Level.INFO
@@ -59,7 +68,6 @@ fun Application.module(testing: Boolean = false) {
         anyHost()
     }
 
-    install(DataConversion)
 
     install(io.ktor.websocket.WebSockets) {
         pingPeriod = Duration.ofSeconds(15)
@@ -77,71 +85,76 @@ fun Application.module(testing: Boolean = false) {
     }
 
     routing {
-        get("/") {
-            call.respondText("HELLO WORLD!!!!!!!!!!!!", contentType = ContentType.Text.Plain)
+        get("/test") {
+            call.respondText("Server online", contentType = ContentType.Text.Plain)
         }
 
-        get<MyLocation> {
-            call.respondText("Location: name=${it.name}, arg1=${it.arg1}, arg2=${it.arg2}")
-        }
-        // Register nested routes
-        get<Type.Edit> {
-            call.respondText("Inside $it")
-        }
-        get<Type.List> {
-            call.respondText("Inside $it")
-        }
-
-        webSocket(deviceLocationEndpoint){
-            incoming.consumeAsFlow()
-                .mapNotNull { it as? Frame.Text }
-                .map { it.readText() }
-                .map { Json.decodeFromString<NamedCoordinates>(it) }
-                .collect {deviceLocation ->
-                    deviceLocations[deviceLocation.name] = deviceLocation.coordinates
-                    broadcastChannel.offer(Unit)
-                }
-        }
-        /*get("/locations") {
-            call.respond(deviceLocations)
-        }*/
-        webSocket(locationsEndPoint) {
+        webSocket(deviceEndpoint) {
             try
             {
-                sendDeviceLocations()
-                broadcastChannel.openSubscription().consumeEach {
-                    sendDeviceLocations()
+                val deviceName = (incoming.receive() as Frame.Text).readText()
+                launch {
+                    incoming.consumeAsFlow()
+                        .mapNotNull { it as? Frame.Text }
+                        .map { it.readText() }
+                        .map { Json.decodeFromString<Coordinates>(it) }
+                        .collect { coordinates ->
+                            deviceLocations[deviceName] = coordinates
+                            broadcastChannel.offer(Unit)
+                        }
                 }
-            } catch (e: ClosedSendChannelException)
-            {
-                // Ignore
-            } catch (e: Exception)
-            {
-                // Ignore
-            }
+                val waypointChannel = deviceWaypoints.getOrPut(deviceName) { BroadcastChannel(CONFLATED) }
+                waypointChannel.openSubscription().consumeEach { waypoint ->
+                    send(Json.encodeToString(waypoint))
+                }
 
+            }
+            catch (e: ClosedReceiveChannelException)
+            {
+            }
+            catch (e: ClosedSendChannelException)
+            {
+            }
         }
+
+        webSocket(applicationEndpoint) {
+            try
+            {
+                launch {
+                    incoming.consumeAsFlow()
+                        .mapNotNull { it as? Frame.Text }
+                        .map { it.readText() }
+                        .map { Json.decodeFromString<NamedCoordinates>(it) }
+                        .collect { namedCoordinates ->
+                            deviceWaypoints[namedCoordinates.name]?.send(namedCoordinates.coordinates)
+                        }
+                }
+                broadcastChannel.openSubscription().consumeEach {
+                    send(Json.encodeToString(deviceLocations))
+                }
+            }
+            catch (e: ClosedReceiveChannelException)
+            {
+            }
+            catch (e: ClosedSendChannelException)
+            {
+            }
+        }
+
+        webSocket("/finished-routes") {
+            finishedRoutes.openSubscription().consumeEach {
+                send(Json.encodeToString(it))
+            }
+        }
+
+        post("/finish-route") {
+            call.receive<FinishedRoute>().also { finishedRoutes.send(it) }
+            call.respond(HttpStatusCode.OK)
+        }
+
         static("/") {
-            resources("")
+            files("public")
+            default("public/index.html")
         }
     }
 }
-
-private suspend fun WebSocketServerSession.sendDeviceLocations()
-{
-    send(Json.encodeToString(deviceLocations))
-}
-
-@KtorExperimentalLocationsAPI
-@Location("/location/{name}")
-class MyLocation(val name: String, val arg1: Int = 42, val arg2: String = "default")
-
-@KtorExperimentalLocationsAPI
-@Location("/type/{name}") data class Type(val name: String) {
-    @Location("/edit")
-    data class Edit(val type: Type)
-
-    @Location("/list/{page}")
-    data class List(val type: Type, val page: Int)
-}
-

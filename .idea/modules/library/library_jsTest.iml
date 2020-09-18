@@ -6,8 +6,8 @@
         <dependsOnModuleNames>:library:commonTest</dependsOnModuleNames>
         <sourceSets>
           <sourceSet>library_jsMain</sourceSet>
-          <sourceSet>library_commonTest</sourceSet>
           <sourceSet>library_commonMain</sourceSet>
+          <sourceSet>library_commonTest</sourceSet>
         </sourceSets>
         <newMppModelJpsModuleKind>COMPILATION_AND_SOURCE_SET_HOLDER</newMppModelJpsModuleKind>
         <externalSystemTestTasks>

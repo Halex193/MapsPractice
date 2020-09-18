@@ -1,0 +1,6 @@
+<resources>
+    <string name="location_host" templateMergeStrategy="preserve" translatable="false">pcinfosibiu.ro</string>
+    <integer name="location_port" templateMergeStrategy="preserve" translatable="false">8000</integer>
+    <string name="google_maps_key" templateMergeStrategy="preserve" translatable="false">AIzaSyCnqSXRu4tIfUIbkOEIFkI-8uqfglWj1hU</string>
+    <string name="what3words_key" templateMergeStrategy="preserve" translatable="false">91XS1L2C</string>
+</resources>
